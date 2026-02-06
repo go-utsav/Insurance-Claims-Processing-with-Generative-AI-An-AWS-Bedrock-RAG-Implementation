@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claim - CL-2024-002</title>
+    <title>Claim - CL-2024-003 (Bad request: no police report)</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
         body { padding: 20px; background: #f5f5f5; font-size: 13px; line-height: 1.4; }
@@ -19,6 +19,7 @@
         .desc { background: #f9f9f9; padding: 10px; border-left: 3px solid #ddd; font-style: italic; margin-top: 6px; font-size: 12px; }
         .photo { margin-top: 10px; }
         .photo img { max-width: 100%; max-height: 280px; border: 1px solid #ddd; border-radius: 4px; }
+        .photo-placeholder { background: #f0f0f0; padding: 40px; text-align: center; color: #666; border: 2px dashed #ccc; }
         .sign { margin-top: 16px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 11px; }
         .sign-line { border-bottom: 1px solid #333; width: 200px; margin-top: 20px; padding-bottom: 2px; }
         @media print { body { padding: 0; background: white; } .form { box-shadow: none; } }
@@ -28,56 +29,56 @@
     <div class="form">
         <div class="top">
             <span class="company">INSURANCE COMPANY LLC</span>
-            <span class="claim-id">CL-2024-002</span>
+            <span class="claim-id">CL-2024-003</span>
         </div>
 
         <div class="section">
             <div class="section-title">CLAIM & DATES</div>
             <table>
-                <tr><td class="label">Claim ID</td><td>CL-2024-002</td></tr>
-                <tr><td class="label">Incident date</td><td>2024-02-01</td></tr>
-                <tr><td class="label">Filing date</td><td>2024-02-21</td></tr>
+                <tr><td class="label">Claim ID</td><td>CL-2024-003</td></tr>
+                <tr><td class="label">Incident date</td><td>2024-03-05</td></tr>
+                <tr><td class="label">Filing date</td><td>2024-03-08</td></tr>
             </table>
         </div>
 
         <div class="section">
             <div class="section-title">DRIVER & VEHICLE</div>
             <table>
-                <tr><td class="label">Driver / Policyholder</td><td>Mike Ross</td></tr>
-                <tr><td class="label">Vehicle</td><td>[To be completed]</td></tr>
-                <tr><td class="label">Policy number</td><td>[To be completed]</td></tr>
+                <tr><td class="label">Driver / Policyholder</td><td>Alex Brown</td></tr>
+                <tr><td class="label">Vehicle</td><td>2019 Honda Civic</td></tr>
+                <tr><td class="label">Policy number</td><td>POL-445566</td></tr>
             </table>
         </div>
 
         <div class="section">
             <div class="section-title">INCIDENT</div>
             <p><strong>Police report filed:</strong> No</p>
-            <div class="desc">"I was dropping off a food delivery for an order when another car rear-ended me at a stoplight. The other driver took off (hit and run). My trunk is completely crushed."</div>
+            <div class="desc">"I was stopped at a red light on Oak Ave when a van hit me from behind. The driver gave me his details but I did not call the police as the damage looked minor. Later the repair shop said the rear bumper and trunk repair will cost over $2,500."</div>
         </div>
 
         <div class="section">
             <div class="section-title">DAMAGES & COST</div>
             <table>
-                <tr><td class="label">Damage</td><td>Trunk completely crushed (rear-ended, hit and run)</td></tr>
-                <tr><td class="label">Est. repair cost</td><td>$3,500</td></tr>
+                <tr><td class="label">Damage</td><td>Rear bumper and trunk damage (collision)</td></tr>
+                <tr><td class="label">Est. repair cost</td><td>$2,500</td></tr>
             </table>
         </div>
 
         <div class="section">
             <div class="section-title">REQUEST</div>
-            <div class="desc">I need the car fixed ASAP so I can get back to work.</div>
+            <div class="desc">Collision claim. I need the car repaired and would like a rental while it is in the shop.</div>
         </div>
 
         <div class="section">
             <div class="section-title">PHOTO</div>
-            <!-- REPLACE: Put your damage photo in this folder and use the filename below. Example: image-case-two.png -->
-            <div class="photo"><img src="image-case-two.png" alt="Damage photo – replace image-case-two.png with your image file" /></div>
+            <!-- REPLACE: Put your damage photo in this folder and use the filename below, e.g. image-case-three.png -->
+            <div class="photo"><img src="image-case-3.png" alt="Damage photo – replace image-case-three.png with your image file" /></div>
         </div>
 
         <div class="sign">
             <p><strong>Statement:</strong> Information provided is true and accurate to the best of my knowledge.</p>
             <div class="sign-line"></div>
-            <p>Signature &nbsp;|&nbsp; Mike Ross &nbsp;|&nbsp; 2024-02-21</p>
+            <p>Signature &nbsp;|&nbsp; Alex Brown &nbsp;|&nbsp; 2024-03-08</p>
         </div>
     </div>
 </body>

@@ -32,6 +32,34 @@ The claim-processing code is split into a small package so it’s easy to follow
 
 ---
 
+## Local PoC: Frontend + Backend (no serverless)
+
+You can run the full flow **locally**: React frontend + Python backend + policy/claim data files. Bedrock is still called from the backend (AWS API).
+
+| Folder / file | Purpose |
+|---------------|---------|
+| **frontend/** | React app: paste or load claim text, submit, display result (status, reasoning, extracted_data). |
+| **backend/** | Flask API: reads policy + claim, calls Bedrock with system prompt, returns JSON. |
+| **data/policy_document.txt** | Policy rules (SwiftCover Auto, coverage, 14-day filing, commercial exclusion). |
+| **data/claim_valid.txt** | Happy path sample (CL-2024-001, Sarah Jenkins — should be APPROVED). |
+| **data/claim_invalid.txt** | Rejection sample (CL-2024-002, Mike Ross — late filing + commercial use). |
+
+**Run locally:**
+
+1. **Backend** (from project root):  
+   `python -m backend.app`  
+   API runs at **http://localhost:5001** (GET /api/health, GET /api/samples/claim_valid|claim_invalid, POST /api/process-claim).  
+   Note: Port 5000 is often used by macOS AirPlay Receiver, so we use 5001 by default. Set `FLASK_PORT=5000` in `.env` if you want 5000.
+
+2. **Frontend:**  
+   `cd frontend && npm install && npm start`  
+   App runs at **http://localhost:3000**. Use “Load Happy Path” or “Load Rejection”, then “Submit” to see status, reasoning, and extracted data.
+
+3. **Environment:**  
+   Backend uses `.env` (BUCKET_NAME not required for PoC; AWS credentials for Bedrock). Optional: `BEDROCK_MODEL_ID` (default Claude 3 Sonnet).
+
+---
+
 ## Case Study: Auto Insurance (First Notice of Loss — FNOL)
 
 ### The Pain Point

@@ -1,0 +1,46 @@
+POLICE ACCIDENT REPORT
+Report Number: PR-2024-001
+Date of Report: 2024-02-10
+Reporting Officer: Officer J. Smith, Badge #4521
+Department: City Police Department
+
+-------------------------------------------------------------------
+INCIDENT SUMMARY
+-------------------------------------------------------------------
+Date and time of incident: 2024-02-10, approximately 14:30
+Location: Main St at intersection with 5th Ave, Anytown
+Weather: Rain, wet road
+Light conditions: Daytime
+
+-------------------------------------------------------------------
+PARTIES INVOLVED
+-------------------------------------------------------------------
+Driver 1 (Claimant):
+  Name: Sarah Jenkins
+  License: [Number]
+  Vehicle: [Year/Make/Model]
+  Insurance: SwiftCover Auto, Policy #998877
+
+Driver 2 / Other:
+  [If applicable: name, vehicle, insurance. Otherwise: "No other vehicle; single vehicle incident – struck guardrail."]
+
+-------------------------------------------------------------------
+NARRATIVE
+-------------------------------------------------------------------
+Driver 1 (Sarah Jenkins) stated she was driving home on Main St in heavy rain when a deer ran onto the road. She swerved to avoid the deer and struck a guardrail. No other vehicles were involved. Damage to the front bumper and headlight of her vehicle. Vehicle was not drivable and was towed. No injuries reported.
+
+Officer observed damage consistent with single-vehicle collision with guardrail. No evidence of alcohol or drugs. Driver 1 was cited/not cited: [Not cited – no violation.]
+
+-------------------------------------------------------------------
+DAMAGE ESTIMATE (if noted)
+-------------------------------------------------------------------
+Claimant vehicle: Front bumper and headlight damage. Estimated repair: approximately $1,800.
+
+-------------------------------------------------------------------
+CONCLUSION
+-------------------------------------------------------------------
+Single-vehicle collision. Driver 1 at fault for loss of control (avoiding animal). Police report filed. No other parties. Report available for insurance purposes.
+
+-------------------------------------------------------------------
+END OF REPORT
+-------------------------------------------------------------------
