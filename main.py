@@ -34,8 +34,20 @@ print(s3.list_objects(Bucket=bucket_name))
 
 
 # upload a file to the bucket
-s3.upload_file(Filename='claim-document.pdf', Bucket=os.getenv('BUCKET_NAME'), Key='claim-document.pdf')
-print(f"File uploaded to {os.getenv('BUCKET_NAME')}")
+import datetime
+
+# Define the target directory structure: claim-documents/YYYY-MM-DD/
+today = datetime.date.today().strftime("%Y-%m-%d")
+folder_name = f"claim-documents/{today}"
+
+# The file to be uploaded
+local_file_path = '/Users/utsavgohel/projects/genai_python/cliam_processing_aws/reports/Claim - CL-2024-001.pdf'
+file_name = os.path.basename(local_file_path)
+s3_key = f"{folder_name}/{file_name}"
+
+# Note: S3 folders are virtual; uploading with Key including folder creates it if not present
+s3.upload_file(Filename=local_file_path, Bucket=os.getenv('BUCKET_NAME'), Key=s3_key)
+print(f"File uploaded to {os.getenv('BUCKET_NAME')}/{s3_key}")
 
 # # download a file from the bucket
 # s3.download_file(Bucket=os.getenv('BUCKET_NAME'), Key='claim-document.pdf', Filename='claim-document.pdf')
