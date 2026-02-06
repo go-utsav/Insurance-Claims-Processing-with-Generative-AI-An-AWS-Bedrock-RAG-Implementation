@@ -43,7 +43,7 @@ def add_cors_headers(response):
     if origin in ("http://localhost:3000", "http://127.0.0.1:3000"):
         response.headers["Access-Control-Allow-Origin"] = origin
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return response
 
 
@@ -153,6 +153,34 @@ def get_upload_url():
             ExpiresIn=900,
         )
         return jsonify({"upload_url": url, "key": key})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/upload-claim-file", methods=["POST"])
+def upload_claim_file():
+    """
+    Proxy upload: accept file via multipart/form-data and upload to S3 server-side.
+    Avoids S3 CORS (browser only talks to this API). Requires claim_id and file.
+    """
+    if not BUCKET_NAME:
+        return jsonify({"error": "S3 bucket not configured (BUCKET_NAME not set)"}), 503
+    claim_id = request.form.get("claim_id", "unknown").strip() or "unknown"
+    file = request.files.get("file")
+    if not file or file.filename == "":
+        return jsonify({"error": "file is required"}), 400
+    safe_name = os.path.basename(file.filename).replace(" ", "-")
+    key = f"claims/{claim_id}/{safe_name}"
+    try:
+        import boto3
+        s3 = boto3.client("s3")
+        s3.upload_fileobj(
+            file.stream,
+            BUCKET_NAME,
+            key,
+            ExtraArgs={"ContentType": file.content_type or "application/octet-stream"},
+        )
+        return jsonify({"ok": True, "key": key})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

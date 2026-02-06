@@ -102,9 +102,10 @@
 
 .two-col {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.5rem;
   align-items: start;
+  max-width: 100%;
 }
 
 @media (max-width: 900px) {
@@ -113,12 +114,14 @@
   }
 }
 
-/* Panels – white, left border accent */
+/* Panels – white, left border accent; constrain width so they don't overflow */
 .panel {
   background: var(--gov-white);
   padding: 1.5rem;
   border: 1px solid var(--gov-border);
   border-left: 4px solid var(--gov-blue);
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .panel-title {
@@ -285,9 +288,10 @@
   font-weight: 600;
 }
 
-/* Result panel */
+/* Result panel – keep content inside column */
 .result-panel {
   min-height: 320px;
+  min-width: 0;
 }
 
 /* Loader */
@@ -353,6 +357,8 @@
 /* Result content */
 .result-content {
   padding: 0.25rem 0;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .status-badge {
@@ -415,7 +421,11 @@
   border: 1px solid var(--gov-border);
   font-size: 0.875rem;
   line-height: 1.4;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .upload-status {
@@ -432,7 +442,7 @@
   color: var(--gov-error);
 }
 
-/* Verification */
+aw2 /* Verification */
 .verification-block {
   background: var(--gov-grey-1);
   padding: 1rem;

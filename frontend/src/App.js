@@ -58,17 +58,15 @@ function App() {
   };
 
   const uploadFileToS3 = async (file, claimId) => {
-    const res = await fetch(
-      `${API_BASE}/api/upload-url?claim_id=${encodeURIComponent(claimId)}&filename=${encodeURIComponent(file.name)}`
-    );
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `Failed to get upload URL (${res.status})`);
-    const putRes = await fetch(data.upload_url, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    const formData = new FormData();
+    formData.append('claim_id', claimId);
+    formData.append('file', file);
+    const res = await fetch(`${API_BASE}/api/upload-claim-file`, {
+      method: 'POST',
+      body: formData,
     });
-    if (!putRes.ok) throw new Error('Upload failed');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`);
   };
 
   const submitForm = async () => {
@@ -161,13 +159,7 @@ function App() {
         <p className="subtitle">
           Compare a claim against your policy. Paste claim text or use the form and upload documents, then submit to see the outcome.
         </p>
-        <div className="steps">
-          <span className="step">1. Load, paste or fill form</span>
-          <span className="step-arrow">→</span>
-          <span className="step">2. Submit</span>
-          <span className="step-arrow">→</span>
-          <span className="step">3. See result</span>
-        </div>
+        
       </header>
 
       <main className="App-main">
@@ -188,7 +180,7 @@ function App() {
           </button>
         </div>
 
-        <div className="two-col">
+        <div className="two-col display-flex">
           <section className="panel claim-panel">
             <h2 className="panel-title">Claim</h2>
             {mode === 'paste' && (
