@@ -1,177 +1,169 @@
 ---
-name: Serverless FNOL Architecture
-overview: "Plan for a serverless Auto Insurance FNOL app: React frontend (form + file upload), API Gateway + Lambda for submit/upload, S3 for documents, Bedrock for analysis and RAG over policy, returning instant rental approval and voucher."
+name: Local FNOL PoC Architecture
+overview: "Plan for a local Auto Insurance FNOL PoC: React frontend (local) + Python backend (local) with policy document, sample claims (happy path + rejection), and Bedrock for claim vs policy analysis. No serverless—everything runs on localhost."
 todos: []
 isProject: false
 ---
 
-# Serverless Auto Insurance FNOL — Architecture Plan
+# Local Auto Insurance FNOL — Proof of Concept Plan
 
 ## Goal
 
-Build an end-to-end serverless solution so a driver can **submit a claim form** and **upload a crash photo + police report**; the system uses **Amazon Bedrock** (and RAG over policy) to analyze fault and rental coverage, then returns an **instant outcome** (e.g. “Claim received. You are approved for a rental car. Here is a voucher.”).
+Build a **local** end-to-end PoC so you can:
+1. **Frontend (React, local):** Submit claim text (or pick a sample claim) and **display the result** (claim_id, status, reasoning, extracted_data).
+2. **Backend (Python, local):** Read **policy rules** and **claim text**, use a **system prompt** to compare claim vs policy via **Amazon Bedrock**, and return APPROVED / NEEDS_REVIEW / DENIED with reasoning.
+
+No Lambda, no API Gateway in the cloud—**frontend and backend both run on your machine**. Bedrock is still called from the backend (AWS API) for the AI part.
 
 ---
 
-## High-Level Architecture
+## High-Level Architecture (Local)
 
 ```mermaid
 flowchart LR
-    subgraph client [Client]
-        React[React App]
+    subgraph local [Your Machine]
+        subgraph frontend [Frontend]
+            React[React App localhost:3000]
+        end
+        subgraph backend [Backend]
+            API[Flask/FastAPI localhost:5000]
+        end
+        subgraph data [Data Files]
+            Policy[policy_document.txt]
+            ClaimValid[claim_valid.txt]
+            ClaimInvalid[claim_invalid.txt]
+        end
     end
-    subgraph api [API Layer]
-        APIGW[API Gateway]
-    end
-    subgraph compute [Compute]
-        LambdaSubmit[Lambda Submit Claim]
-        LambdaProcess[Lambda Process Claim]
-    end
-    subgraph storage [Storage]
-        S3Claims[S3 Claims Bucket]
-        S3Policy[S3 Policy Bucket]
-    end
-    subgraph ai [AI]
+    subgraph aws [AWS]
         Bedrock[Bedrock]
-        KB[Knowledge Base optional]
     end
-    React -->|POST form + metadata| APIGW
-    React -->|Presigned URL upload| S3Claims
-    APIGW --> LambdaSubmit
-    LambdaSubmit --> S3Claims
-    LambdaSubmit --> LambdaProcess
-    LambdaProcess --> S3Claims
-    LambdaProcess --> S3Policy
-    LambdaProcess --> Bedrock
-    Bedrock --> KB
-    LambdaProcess --> React
+    React -->|POST claim text| API
+    API --> Policy
+    API --> ClaimValid
+    API --> ClaimInvalid
+    API -->|InvokeModel with system prompt + policy + claim| Bedrock
+    Bedrock -->|JSON: status, reasoning, extracted_data| API
+    API -->|JSON response| React
 ```
 
 **Flow in words:**
 
-1. **React** — User fills FNOL form (claim ID, driver, incident date, etc.) and selects files: crash photo + police report (PDF/image). Form submit sends JSON to API; uploads go to S3 via presigned URLs.
-2. **API Gateway** — REST or HTTP API exposing at least: `POST /claim` (form + metadata), and optionally `POST /claim/upload-url` (returns presigned URL for a given file).
-3. **Lambda (Submit)** — Validates input, generates claim ID if needed, returns presigned URLs for photo and police report (or accepts multipart if you prefer). After uploads complete, triggers processing (invoke second Lambda or same Lambda with “process” path).
-4. **Lambda (Process)** — Fetches police report and optional photo from S3, pulls policy context from S3 or Knowledge Base, calls Bedrock to: (a) extract fault/incident summary from report, (b) answer “Is rental reimbursement covered?” using policy (RAG or in-context), (c) generate short message + voucher text. Writes result to S3 (e.g. `claims/<claim-id>/result.json`) and/or returns in API response.
-5. **S3** — Two buckets or prefixes: (1) **Claims** — uploaded photos, police reports, and processing results by claim ID; (2) **Policy** — policy documents for RAG (or inline in Lambda if very small).
-6. **Bedrock** — Foundation model (e.g. Claude) for document understanding and text generation. Optionally **Bedrock Knowledge Base** with policy docs and vector store for RAG; otherwise Lambda retrieves policy from S3 and passes it in the prompt.
+1. **React (localhost:3000)** — User pastes claim text or selects a sample (Happy Path / Rejection). Clicks “Submit”. Frontend sends claim text to local backend.
+2. **Backend (localhost:5000)** — Receives claim text, reads **policy_document.txt** (the “knowledge base” / rules), builds prompt with **system prompt** + policy + claim, calls **Bedrock** (Claude). Parses model JSON (claim_id, status, reasoning, extracted_data). Returns that JSON to frontend.
+3. **Frontend** — Displays result: status (APPROVED / NEEDS_REVIEW / DENIED), reasoning, and extracted_data in a simple, readable layout.
+4. **Bedrock** — Only cloud service used; called from your local Python backend. No S3/Lambda/API Gateway for this PoC.
+
+---
+
+## Data Files (The “RAG” / Rules and Sample Claims)
+
+All paths below are relative to project root. Backend reads these from disk.
+
+### 1. Policy (The Rules)
+
+**File:** `data/policy_document.txt`
+
+- Represents the **knowledge base** the AI must follow.
+- Contents: AUTO INSURANCE POLICY #998877, SwiftCover Auto, effective date, Section A (Collision, Comprehensive, Rental Reimbursement), Section B (Filing requirements, exclusions e.g. 14-day filing, no commercial use without endorsement).
+- Backend loads this once per request and passes it into the prompt as `[Policy]`.
+
+### 2. Sample Claim 1 — Happy Path (APPROVED)
+
+**File:** `data/claim_valid.txt`
+
+- Claim ID CL-2024-001, Sarah Jenkins, incident 2024-02-10, filing 2024-02-12 (within 14 days).
+- Collision, not drivable, rental requested; police report “No” but damage &lt; $2,000 so not mandatory.
+- Expected AI outcome: **APPROVED** (or NEEDS_REVIEW if you want to flag missing police report for &lt; $2k).
+
+### 3. Sample Claim 2 — Rejection (DENIED / NEEDS_REVIEW)
+
+**File:** `data/claim_invalid.txt`
+
+- Claim ID CL-2024-002, Mike Ross, incident 2024-02-01, filing 2024-02-21 (**20 days** → late; policy says 14 days).
+- “Dropping off a food delivery” → implies **commercial use** (exclusion without commercial endorsement).
+- Expected AI outcome: **DENIED** or **NEEDS_REVIEW** with reasoning (late filing + commercial use).
+
+### 4. System Prompt (The AI Instruction)
+
+**Location:** In backend code (e.g. `backend/prompts.py` or inside `backend/app.py`).
+
+- Instructs the model to act as an expert Insurance Claims Adjuster.
+- Steps: (1) Analyze [Claim] — extract Driver Name, Date of Incident, Date of Filing, Estimated Cost, Incident Description. (2) Check [Policy]: timely (14 days)? Police report required if collision &gt; $2,000? Exclusions (e.g. commercial use)? (3) Output JSON: `claim_id`, `status` (APPROVED | NEEDS_REVIEW | DENIED), `reasoning`, `extracted_data`.
+- Backend builds one user message: system prompt + “Policy: …” + “Claim: …” and sends to Bedrock (Messages API). Parses JSON from model reply and returns it to frontend.
 
 ---
 
 ## Component Breakdown
 
-### 1. Frontend (React)
+### 1. Frontend (React, local)
 
-- **Form:** Claim metadata (e.g. driver name, incident date, policy number, contact). No file binary in form — only filenames and types; actual upload via presigned URL.
-- **Upload:** Two file inputs — “Crash photo” and “Police report” (PDF or image). On submit:
-  - Call `POST /claim` with form data + list of files to upload (name, type).
-  - Backend returns claim ID + presigned URLs per file.
-  - Frontend uploads each file with `PUT` to the presigned URL.
-  - Frontend calls `POST /claim/<claim-id>/process` (or same endpoint with “process” action) to trigger Bedrock processing.
-- **Result:** Poll or wait for sync response showing: “Claim received. You are approved for a rental car. Here is a voucher.” (or not approved + reason). Optionally show fault summary and rental yes/no.
-- **Hosting:** Static build (e.g. `build/`) in **S3 + CloudFront** or **Amplify Hosting** for HTTPS and CORS.
+- **Location:** `frontend/` (existing Create React App).
+- **UI:** Simple layout: textarea or file input for claim text; dropdown or buttons to load sample “Happy Path” or “Rejection” (fills textarea with contents of claim_valid.txt / claim_invalid.txt, or frontend can call `GET /api/samples/claim_valid` to get text).
+- **Submit:** `POST /api/process-claim` with body `{ "claim_text": "..." }`. Backend URL e.g. `http://localhost:5000` (env variable).
+- **Result:** Display response: `claim_id`, `status`, `reasoning`, `extracted_data` (formatted so it’s easy to read). Optional: color-code status (green APPROVED, red DENIED, yellow NEEDS_REVIEW).
+- **No auth** for PoC; CORS allowed from `http://localhost:3000`.
 
-**Tech:** React, fetch/axios. Keep API base URL in env (e.g. API Gateway invoke URL). No AWS credentials in frontend; all auth via API Gateway (e.g. IAM or API key if internal only).
+### 2. Backend (Python, local)
 
-### 2. API Layer (API Gateway + Lambda)
+- **Location:** `backend/` with e.g. `app.py` (Flask or FastAPI).
+- **Endpoints:**
+  - `GET /api/health` — Returns OK (for frontend to check backend is up).
+  - `GET /api/samples/<name>` — Optional. Returns raw claim text for `claim_valid` or `claim_invalid` (reads from `data/claim_valid.txt`, `data/claim_invalid.txt`).
+  - `POST /api/process-claim` — Body: `{ "claim_text": "..." }`. Reads `data/policy_document.txt`, builds prompt (system prompt + policy + claim), calls Bedrock (reuse `claim_processor.bedrock.invoke_claude3_messages` or equivalent), parses JSON from model output, returns `{ "claim_id", "status", "reasoning", "extracted_data" }`.
+- **CORS:** Allow `http://localhost:3000` and `Content-Type`.
+- **Data path:** Policy and claim files in `data/` (relative to project root or backend root). Backend loads policy once per request from `data/policy_document.txt`.
+- **Bedrock:** Use existing `claim_processor` Bedrock helpers; model e.g. Claude 3 Sonnet. Ensure response is parsed as JSON (strip markdown if needed) and validated before returning to frontend.
 
-- **API Gateway:** REST API or HTTP API (simpler). Routes:
-  - `POST /claim` — Body: JSON with form fields + `files: [{ name, type }]`. Lambda returns `claimId` + presigned URLs for each file. Client uploads to S3 using those URLs.
-  - `PUT /claim/{claimId}/process` (or `POST /claim` with action “process” after uploads) — Triggers processing Lambda; optionally returns 202 + job id, or synchronous 200 with outcome (if processing is fast enough).
-- **CORS:** Enable for your React origin (e.g. CloudFront or Amplify URL). Return `Access-Control-Allow-Origin` and allow `Content-Type`, `Authorization` if used.
-- **Lambda (Submit):** Input validation, generate claim ID (e.g. UUID or `CL-YYYY-NNN`), generate S3 presigned URLs (PUT) for `claims/<claimId>/photo.<ext>` and `claims/<claimId>/police-report.<ext>`. Store claim metadata in DynamoDB or in S3 as `claims/<claimId>/metadata.json` (optional). Return JSON with `claimId` and `uploadUrls`.
-- **Lambda (Process):** Invoked by second route or by EventBridge/Step Functions after upload. Reads from S3: police report (and optionally photo). If using Knowledge Base: call Bedrock Retrieve + Generate; else: read policy doc from S3, build prompt with report + policy, call Bedrock InvokeModel. Parse model output (fault summary, rental covered yes/no, voucher text). Save result to S3; return same in API response (or return job id and have frontend poll).
+### 3. Data Files (Local Disk)
 
-**Alternative (simpler for PoC):** Single Lambda behind one `POST /claim` that: accepts form + small files in request (e.g. multipart with size limit), writes to S3, then runs Bedrock in the same invocation and returns outcome. Presigned URL approach scales better and avoids payload limits.
+- **data/policy_document.txt** — Policy text (SwiftCover Auto, coverage limits, rental reimbursement, 14-day filing, commercial exclusion).
+- **data/claim_valid.txt** — Happy path claim (Sarah Jenkins, timely, non-commercial).
+- **data/claim_invalid.txt** — Rejection claim (Mike Ross, late filing, food delivery / commercial).
 
-### 3. Storage (S3)
+### 4. Processing (Backend + Bedrock)
 
-- **Claims bucket (or prefix):**  
-  - `claims/<claimId>/metadata.json` — form fields.  
-  - `claims/<claimId>/photo.<ext>` — crash photo.  
-  - `claims/<claimId>/police-report.pdf` (or .jpg).  
-  - `claims/<claimId>/result.json` — Bedrock output (fault, rental approved, message, voucher).
-- **Policy bucket (or prefix):** Policy PDFs or text for RAG. Lambda or Knowledge Base reads from here.
-- **Lifecycle:** Optional lifecycle rules to move old claims to cheaper storage or expire after N days for PoC.
-- **Security:** Bucket policy: only Lambda (and optionally API Gateway if using VPC) can read/write; no public access. Presigned URLs short-lived (e.g. 5–15 min).
-
-You already have a claim-documents style structure in [main.py](main.py); this plan aligns with that (e.g. `claim-documents/` or `claims/<claimId>/`).
-
-### 4. Processing and RAG (Lambda + Bedrock)
-
-- **Document understanding:** Lambda gets police report from S3 (text extraction: use Bedrock with document in prompt if model supports it, or use Textract for PDF → text, then pass text to Bedrock). Prompt: “Extract fault, parties, incident summary from this police report.”
-- **Policy / RAG:**  
-  - **Option A (simple):** Policy stored as one or few text/PDF files in S3. Lambda downloads, extracts text (or uses Textract), passes “Policy: …” in the same Bedrock prompt: “Given this policy, is Rental Reimbursement included? Yes or no and quote.”
-  - **Option B (scalable):** Bedrock Knowledge Base — ingest policy documents into a vector store (e.g. OpenSearch Serverless), use RetrieveAndGenerate API so Bedrock gets only relevant chunks. Lambda calls RetrieveAndGenerate with question “Is rental reimbursement covered for this policy?” and incident context.
-- **Response generation:** One more Bedrock call (or same response): “Generate a short message for the driver: claim received; rental approved/not approved; here is the voucher text.” Output stored in `result.json` and returned to client.
-- **Model choice:** e.g. `anthropic.claude-v2` or `anthropic.claude-3-sonnet` via Bedrock InvokeModel (or InvokeModelWithResponseStream if you want streaming later). Same for Knowledge Base if used.
-
-### 5. Optional: Step Functions or Async Pattern
-
-- If processing takes > 30 s (Lambda limit), use **Step Functions** or **async invoke:** Lambda returns 202 + `jobId`, processes in background, writes result to S3/DynamoDB; frontend polls `GET /claim/<claimId>/result` until ready.
-- For PoC, synchronous Lambda (up to ~30 s) is often enough.
-
-### 6. Security and IAM
-
-- **API Gateway:** No public write without auth for production. Options: API key (internal), IAM (with Cognito Identity Pool for React), or Lambda authorizer (e.g. JWT).
-- **Lambda roles:** Least privilege: S3 GetObject/PutObject on claims and policy buckets; Bedrock InvokeModel (and Knowledge Base permissions if used); CloudWatch Logs. No Bedrock or S3 credentials in code; use IAM role.
-- **Secrets:** Store nothing in frontend. Lambda can use SSM Parameter Store or env for model IDs / config if needed.
-
-### 7. Infrastructure as Code (IaC)
-
-- **Options:** AWS SAM, AWS CDK, or Serverless Framework.
-- **Resources to define:** API Gateway, 2 Lambdas (submit + process), S3 buckets (or prefixes), IAM roles, optional DynamoDB table for claim metadata, optional Bedrock Knowledge Base and index. Environment variables (bucket names, model ID) into Lambdas.
-- **Deploy:** Single stack (e.g. `sam deploy` or `cdk deploy`). React build deployed separately (S3 + CloudFront or Amplify).
+- **No Lambda:** All logic in local Flask/FastAPI.
+- **No S3 for this PoC:** Policy and sample claims are local files. Optional later: allow file upload and pass content as claim_text.
+- **RAG:** “RAG” here is **in-context**: full policy text + full claim text in the prompt. No vector store or Knowledge Base for this PoC.
+- **System prompt:** Embedded in backend; defines role (Claims Adjuster), steps (extract, check policy, output JSON).
+- **Model:** Claude 3 (Messages API) via Bedrock; parse JSON from assistant reply (handle possible markdown code fence).
 
 ---
 
 ## Suggested Implementation Order
 
-1. **S3 + IAM:** Create claims bucket and policy bucket (or prefixes); bucket policies and Lambda roles.
-2. **Lambda (Process) only:** Python: read one police report from S3, call Bedrock (extract summary + “rental covered?” with policy in prompt), write `result.json`. Test with existing [main.py](main.py)-style paths.
-3. **Lambda (Submit):** Generate claim ID and presigned URLs; optional write `metadata.json`. No Bedrock yet.
-4. **API Gateway:** `POST /claim` → Submit Lambda; `POST /claim/<id>/process` → Process Lambda. Test with Postman/curl.
-5. **React:** Form + file pickers; call API for presigned URLs; upload files; call process; display outcome.
-6. **RAG upgrade (optional):** Add Bedrock Knowledge Base with policy docs; switch Process Lambda to RetrieveAndGenerate for “rental covered?”.
-7. **Hosting + CORS:** Deploy React to S3/CloudFront or Amplify; set CORS on API and bucket; add auth if required.
+1. **Data files:** Create `data/policy_document.txt`, `data/claim_valid.txt`, `data/claim_invalid.txt` with the exact text from the PoC spec (copy-paste from plan).
+2. **Backend:** Create `backend/app.py` (Flask or FastAPI), add system prompt constant, endpoint `POST /api/process-claim` that reads policy + claim text, calls Bedrock, parses JSON, returns result. Optional: `GET /api/samples/<name>`. Enable CORS for localhost:3000.
+3. **Frontend:** Update `frontend/src/App.js`: form with textarea for claim text, buttons “Load Happy Path” / “Load Rejection” (set text from samples or fetch from API), “Submit” calls `POST /api/process-claim`, display result (status, reasoning, extracted_data).
+4. **Run:** Terminal 1 — `cd backend && python app.py` (or `flask run`). Terminal 2 — `cd frontend && npm start`. Open browser to localhost:3000, submit claim, see result.
 
 ---
 
-## Summary Diagram (End-to-End)
+## Summary Diagram (Local PoC)
 
 ```mermaid
 sequenceDiagram
     participant User
     participant React
-    participant APIGW as API Gateway
-    participant SubLambda as Lambda Submit
-    participant S3
-    participant ProcLambda as Lambda Process
+    participant Backend
+    participant Data
     participant Bedrock
-    User->>React: Fill form, select photo + report
-    React->>APIGW: POST /claim (form + file list)
-    APIGW->>SubLambda: Invoke
-    SubLambda->>SubLambda: Generate claimId, presigned URLs
-    SubLambda->>APIGW: claimId + uploadUrls
-    APIGW->>React: Response
-    React->>S3: PUT photo (presigned)
-    React->>S3: PUT police report (presigned)
-    React->>APIGW: POST /claim/claimId/process
-    APIGW->>ProcLambda: Invoke
-    ProcLambda->>S3: Get report, policy
-    ProcLambda->>Bedrock: Extract fault, check rental, generate message
-    Bedrock->>ProcLambda: Fault, rental yes/no, voucher text
-    ProcLambda->>S3: Save result.json
-    ProcLambda->>APIGW: Outcome
-    APIGW->>React: "Approved for rental. Here is voucher."
-    React->>User: Show message + voucher
+    User->>React: Paste claim or pick sample
+    React->>Backend: POST /api/process-claim with claim_text
+    Backend->>Data: Read policy_document.txt
+    Backend->>Backend: Build prompt: system + policy + claim
+    Backend->>Bedrock: InvokeModel (Messages API)
+    Bedrock->>Backend: JSON: status, reasoning, extracted_data
+    Backend->>React: Return JSON
+    React->>User: Display status, reasoning, extracted_data
 ```
 
 ---
 
 ## What You Already Have
 
-- [main.py](main.py): S3 client, bucket create, upload to `claim-documents/<date>/` — reuse same bucket/pattern for claim uploads and processing input.
-- [readme.md](readme.md): FNOL case study and learning path — aligns with this architecture (upload photo + report, Bedrock + RAG, instant voucher).
+- **frontend/** — React app (Create React App); update to add claim form and result display.
+- **claim_processor/** — Bedrock helpers (Messages API); reuse from backend to call Claude 3.
+- **main.py, readme.md** — S3/bucket and FNOL case study; optional for later serverless version.
 
-This plan gives you a single, coherent serverless design: React form + upload, API Gateway + Lambda, S3, and Bedrock (with optional Knowledge Base for RAG), so you can implement step by step as an AWS Solutions Architect would.
+This plan gives you a **local-only** PoC: React frontend + Python backend + policy/claim data files + Bedrock for claim-vs-policy analysis, with no serverless infrastructure. You can later add S3, Lambda, and API Gateway if you move to a deployed solution.

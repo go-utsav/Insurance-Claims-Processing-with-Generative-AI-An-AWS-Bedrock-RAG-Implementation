@@ -1,0 +1,21 @@
+AUTO INSURANCE POLICY #998877
+INSURER: SwiftCover Auto
+EFFECTIVE DATE: 2024-01-01
+
+SECTION A: COVERAGE LIMITS
+1. Collision Coverage: Pays for damage to your vehicle caused by collision with another object or vehicle. 
+   - Deductible: $500. 
+   - Maximum Payout: Market value of the vehicle.
+   - Requirement: A police report is MANDATORY for all collision claims over $2,000.
+
+2. Comprehensive Coverage: Pays for damage caused by non-collision events (weather, theft, vandalism).
+   - Deductible: $250.
+   - Windshield Repair: $0 Deductible (Free).
+
+3. Rental Reimbursement:
+   - Covers rental car costs up to $40/day for a maximum of 30 days while the vehicle is being repaired.
+   - This coverage only applies if the vehicle is not drivable.
+
+SECTION B: FILING REQUIREMENTS
+1. Timeline: All claims must be filed within 14 days of the incident.
+2. Exclusions: Coverage is denied if the driver was using the vehicle for commercial purposes (e.g., rideshare, delivery) at the time of the incident without a commercial endorsement.
