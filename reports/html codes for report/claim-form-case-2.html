@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claim - CL-2024-002</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { padding: 20px; background: #f5f5f5; font-size: 13px; line-height: 1.4; }
+        .form { max-width: 800px; margin: 0 auto; background: white; padding: 24px; box-shadow: 0 0 10px rgba(0,0,0,0.08); border-radius: 4px; }
+        .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #2c5aa0; }
+        .company { font-size: 18px; font-weight: bold; color: #2c5aa0; }
+        .claim-id { background: #2c5aa0; color: white; padding: 6px 14px; border-radius: 4px; font-weight: bold; }
+        .section { margin-bottom: 14px; }
+        .section-title { background: #e8eff7; padding: 6px 10px; font-weight: bold; color: #2c5aa0; font-size: 12px; border-left: 3px solid #2c5aa0; margin-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        td { padding: 6px 10px; border-bottom: 1px solid #eee; }
+        .label { font-weight: bold; width: 35%; color: #2c5aa0; }
+        .desc { background: #f9f9f9; padding: 10px; border-left: 3px solid #ddd; font-style: italic; margin-top: 6px; font-size: 12px; }
+        .photo { margin-top: 10px; }
+        .photo img { max-width: 100%; max-height: 280px; border: 1px solid #ddd; border-radius: 4px; }
+        .sign { margin-top: 16px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 11px; }
+        .sign-line { border-bottom: 1px solid #333; width: 200px; margin-top: 20px; padding-bottom: 2px; }
+        @media print { body { padding: 0; background: white; } .form { box-shadow: none; } }
+    </style>
+</head>
+<body>
+    <div class="form">
+        <div class="top">
+            <span class="company">INSURANCE COMPANY LLC</span>
+            <span class="claim-id">CL-2024-002</span>
+        </div>
+
+        <div class="section">
+            <div class="section-title">CLAIM & DATES</div>
+            <table>
+                <tr><td class="label">Claim ID</td><td>CL-2024-002</td></tr>
+                <tr><td class="label">Incident date</td><td>2024-02-01</td></tr>
+                <tr><td class="label">Filing date</td><td>2024-02-21</td></tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">DRIVER & VEHICLE</div>
+            <table>
+                <tr><td class="label">Driver / Policyholder</td><td>Mike Ross</td></tr>
+                <tr><td class="label">Vehicle</td><td>[To be completed]</td></tr>
+                <tr><td class="label">Policy number</td><td>[To be completed]</td></tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">INCIDENT</div>
+            <p><strong>Police report filed:</strong> No</p>
+            <div class="desc">"I was dropping off a food delivery for an order when another car rear-ended me at a stoplight. The other driver took off (hit and run). My trunk is completely crushed."</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">DAMAGES & COST</div>
+            <table>
+                <tr><td class="label">Damage</td><td>Trunk completely crushed (rear-ended, hit and run)</td></tr>
+                <tr><td class="label">Est. repair cost</td><td>$3,500</td></tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">REQUEST</div>
+            <div class="desc">I need the car fixed ASAP so I can get back to work.</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">PHOTO</div>
+            <div class="photo"><img src="image-case-two.png" alt="Claim photo" /></div>
+        </div>
+
+        <div class="sign">
+            <p><strong>Statement:</strong> Information provided is true and accurate to the best of my knowledge.</p>
+            <div class="sign-line"></div>
+            <p>Signature &nbsp;|&nbsp; Mike Ross &nbsp;|&nbsp; 2024-02-21</p>
+        </div>
+    </div>
+</body>
+</html>
