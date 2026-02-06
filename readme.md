@@ -4,6 +4,8 @@
 
 This guide is for **beginners and non-technical readers**. No prior AWS experience needed. We focus on one case study: **Auto Insurance — First Notice of Loss (FNOL)**.
 
+*Cloud architecture diagram: [image.png](image.png) (open to view).*
+
 ---
 
 ## Project layout (code organization)
