@@ -6,6 +6,32 @@ This guide is for **beginners and non-technical readers**. No prior AWS experien
 
 ---
 
+## Project layout (code organization)
+
+The claim-processing code is split into a small package so it’s easy to follow:
+
+| Folder / file | Purpose |
+|---------------|---------|
+| **claim_processor/** | Main package: prompts, S3 document read, Bedrock calls, process + compare logic. |
+| **claim_processor/prompts.py** | Prompt templates (extract info, generate summary). |
+| **claim_processor/document.py** | Read claim document from S3 (PDF or text). |
+| **claim_processor/bedrock.py** | Call Claude 3 on Bedrock (Messages API). |
+| **claim_processor/processor.py** | `process_document` (extract + summary) and `compare_models` (run same prompt on multiple models). |
+| **claim-process.py** or **run_claim_process.py** | Entry scripts: run process and/or model comparison from the command line. |
+
+**Run from command line:**
+
+- Process one claim (extract + summary):  
+  `python claim-process.py` or `python claim-process.py --process`
+- Compare Claude 3 models on the same document:  
+  `python claim-process.py --compare`
+- Run both:  
+  `python claim-process.py --process --compare`
+- Use a different S3 key:  
+  `python claim-process.py --key "claim-documents/2026-02-06/Claim - CL-2024-002.pdf"`
+
+---
+
 ## Case Study: Auto Insurance (First Notice of Loss — FNOL)
 
 ### The Pain Point
